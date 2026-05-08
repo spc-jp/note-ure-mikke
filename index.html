@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>note売れみっけ | Smile Plus Consulting</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Noto+Serif+JP:wght@900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #223670;
+            --accent: #D0A900;
+            --bg: #faf8f3;
+            --white: #ffffff;
+            --text: #333333;
+            --error: #e74c3c;
+            --success: #27ae60;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --radius: 14px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.8;
+            padding-bottom: 60px;
+        }
+
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--primary);
+        }
+        .badge {
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        /* Card Style */
+        .card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            border-left: 4px solid var(--accent);
+            padding-left: 12px;
+        }
+
+        /* Form Controls */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 0.95rem; }
+        input[type="text"], input[type="url"], textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(208, 169, 0, 0.2);
+        }
+        .radio-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .radio-label {
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            border: 1px solid transparent;
+        }
+        .radio-label input { margin-right: 8px; }
+        .radio-label:has(input:checked) {
+            border-color: var(--accent);
+            background: #fffdf5;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-2px); }
+        .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* Output Area Tabs */
+        .tabs { display: flex; border-bottom: 2px solid #eee; margin-bottom: 20px; }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #999;
+        }
+        .tab.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+        .tab-content { display: none; position: relative; }
+        .tab-content.active { display: block; }
+
+        .copy-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #f0f0f0;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .output-box {
+            background: #fdfdfd;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 200px;
+            white-space: pre-wrap;
+            font-size: 0.95rem;
+        }
+
+        /* Loading */
+        .loading { display: flex; justify-content: center; align-items: center; padding: 40px; }
+        .dot { width: 8px; height: 8px; margin: 0 4px; background: var(--primary); border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        /* Paywall Overlay */
+        #paywall {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .paywall-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            max-width: 500px;
+            width: 100%;
+            padding: 30px;
+            text-align: center;
+        }
+        .plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .plan-box { border: 2px solid #eee; border-radius: 12px; padding: 15px; }
+        .plan-box.featured { border-color: var(--accent); background: #fffdf5; }
+        .unlock-area { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+
+        /* Banner */
+        #error-banner {
+            display: none;
+            background: var(--error);
+            color: white;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #777;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="logo">note売れ<span style="color:var(--accent)">みっけ</span></div>
+        <div id="usage-badge" class="badge">残り3回</div>
+    </header>
+
+    <div id="error-banner"></div>
+
+    <div class="card">
+        <h2>【基本情報】</h2>
+        <div class="form-group">
+            <label>アプリ名 *</label>
+            <input type="text" id="appName" placeholder="例：Vertical Rotation Master">
+        </div>
+        <div class="form-group">
+            <label>アプリURL *</label>
+            <input type="url" id="appUrl" placeholder="https://...">
+        </div>
+        <div class="form-group">
+            <label>ライト版パスワード *</label>
+            <input type="text" id="litePass" placeholder="購入者に配布するキー">
+        </div>
+        <div class="form-group">
+            <label>ライト版価格</label>
+            <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="litePrice" value="¥500"> ¥500</label>
+                <label class="radio-label"><input type="radio" name="litePrice" value="¥980" checked> ¥980</label>
+                <label class="radio-label"><input type="radio" name="litePrice" value="¥1,480"> ¥1,480</label>
+                <label class="radio-label"><input type="radio" name="litePrice" value="¥1,980"> ¥1,980</label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Pro版URL（任意）</label>
+            <input type="url" id="proUrl" placeholder="Stripe決済ページなど">
+        </div>
+        <div class="form-group">
+            <label>Pro版価格</label>
+            <input type="text" id="proPrice" value="¥2,980/月">
+        </div>
+
+        <h2 style="margin-top:40px;">【ターゲット・トーン】</h2>
+        <div class="form-group">
+            <label>想定ユーザー</label>
+            <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="target" value="一般50-70代" checked> 一般50-70代</label>
+                <label class="radio-label"><input type="radio" name="target" value="個人事業主"> 個人事業主</label>
+                <label class="radio-label"><input type="radio" name="target" value="士業"> 士業</label>
+                <label class="radio-label"><input type="radio" name="target" value="経営者"> 経営者</label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>解決する悩み *</label>
+            <textarea id="painPoint" rows="3" placeholder="何に困っている人に届けたいですか？"></textarea>
+        </div>
+        <div class="form-group">
+            <label>アプリで叶うこと *</label>
+            <textarea id="benefit" rows="3" placeholder="このアプリを使うとどうなれますか？"></textarea>
+        </div>
+        <div class="form-group">
+            <label>文体</label>
+            <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="tone" value="共感ストーリー型" checked> 共感ストーリー型</label>
+                <label class="radio-label"><input type="radio" name="tone" value="実用ノウハウ型"> 実用ノウハウ型</label>
+                <label class="radio-label"><input type="radio" name="tone" value="専門家向け硬め型"> 専門家向け</label>
+                <label class="radio-label"><input type="radio" name="tone" value="親しみカジュアル型"> 親しみカジュアル</label>
+            </div>
+        </div>
+
+        <button id="generateBtn" class="btn-primary">🚀 売れるnote記事を生成する</button>
+    </div>
+
+    <div class="card">
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('free')">📖 note無料パート</div>
+            <div class="tab" onclick="switchTab('paid')">🔒 note有料パート</div>
+        </div>
+
+        <div id="loading" class="loading" style="display:none;">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+
+        <div id="free-content" class="tab-content active">
+            <button class="copy-btn" onclick="copyContent('free')">📋 コピー</button>
+            <div id="output-free" class="output-box">ここに生成結果が表示されます。</div>
+        </div>
+
+        <div id="paid-content" class="tab-content">
+            <button class="copy-btn" onclick="copyContent('paid')">📋 コピー</button>
+            <div id="output-paid" class="output-box">有料パートの内容が表示されます。</div>
+        </div>
+    </div>
+
+    <footer>
+        考えるを、ひとりにしない｜Smile Plus Consulting ©2026 SPC
+    </footer>
+</div>
+
+<div id="paywall">
+    <div class="paywall-card">
+        <h3>✨ 生成回数の上限に達しました</h3>
+        <p style="font-size:0.9rem; color:#666; margin:10px 0;">継続して利用するにはプランをお選びください</p>
+        
+        <div class="plan-grid">
+            <div class="plan-box">
+                <h4>🌿 ライト版</h4>
+                <p style="font-size:1.2rem; font-weight:bold;">¥1,980</p>
+                <p style="font-size:0.75rem;">50回生成可能</p>
+                <a href="#" style="display:block; margin-top:10px; color:var(--primary); font-weight:bold;">noteで購入</a>
+            </div>
+            <div class="plan-box featured">
+                <h4>✨ Pro版</h4>
+                <p style="font-size:1.2rem; font-weight:bold;">¥4,980/月</p>
+                <p style="font-size:0.75rem;">無制限生成</p>
+                <a href="#" style="display:block; margin-top:10px; color:var(--accent); font-weight:bold;">Stripeで登録</a>
+            </div>
+        </div>
+
+        <div class="unlock-area">
+            <p style="font-size:0.85rem; margin-bottom:10px;">すでにご購入の方</p>
+            <input type="text" id="licenseKey" placeholder="解除パスワードを入力" style="margin-bottom:10px;">
+            <button class="btn-primary" onclick="unlock()" style="padding:10px;">解除する</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 定数と設定 ---
+    const API_ENDPOINT = 'https://your-worker.workers.dev'; 
+    const MODEL = 'claude-sonnet-4-5-20250929';
+    const MAX_TOKENS = 3000;
+
+    const FREE_LIMIT = 3;
+    const LITE_LIMIT = 50;
+    const LITE_PASS = 'note-lite-2k26';
+    const PRO_PASS = 'note-pro-2k26';
+
+    // --- 初期化 & ローカルストレージ ---
+    let state = {
+        uses: parseInt(localStorage.getItem('note_ureru_uses') || '0'),
+        license: localStorage.getItem('note_ureru_license') || 'none'
+    };
+
+    const formFields = ['appName', 'appUrl', 'litePass', 'proUrl', 'proPrice', 'painPoint', 'benefit'];
+    
+    function saveDraft() {
+        formFields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) localStorage.setItem('draft_' + id, el.value);
+        });
+    }
+
+    function loadDraft() {
+        formFields.forEach(id => {
+            const val = localStorage.getItem('draft_' + id);
+            if (val) document.getElementById(id).value = val;
+        });
+        updateBadge();
+    }
+
+    // --- UI更新系 ---
+    function updateBadge() {
+        const badge = document.getElementById('usage-badge');
+        if (state.license === 'pro') {
+            badge.innerText = '✨ Pro版';
+        } else if (state.license === 'lite') {
+            badge.innerText = `🌿 ライト 残り${LITE_LIMIT - state.uses}回`;
+        } else {
+            badge.innerText = `残り${Math.max(0, FREE_LIMIT - state.uses)}回`;
+        }
+    }
+
+    function checkLimit() {
+        if (state.license === 'pro') return true;
+        if (state.license === 'lite' && state.uses < LITE_LIMIT) return true;
+        if (state.license === 'none' && state.uses < FREE_LIMIT) return true;
+        
+        document.getElementById('paywall').style.display = 'flex';
+        return false;
+    }
+
+    function unlock() {
+        const key = document.getElementById('licenseKey').value;
+        if (key === PRO_PASS) {
+            state.license = 'pro';
+        } else if (key === LITE_PASS) {
+            state.license = 'lite';
+        } else {
+            alert('パスワードが正しくありません');
+            return;
+        }
+        localStorage.setItem('note_ureru_license', state.license);
+        document.getElementById('paywall').style.display = 'none';
+        updateBadge();
+    }
+
+    function switchTab(type) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        if (type === 'free') {
+            document.querySelectorAll('.tab')[0].classList.add('active');
+            document.getElementById('free-content').classList.add('active');
+        } else {
+            document.querySelectorAll('.tab')[1].classList.add('active');
+            document.getElementById('paid-content').classList.add('active');
+        }
+    }
+
+    // --- 生成ロジック ---
+    async function generate() {
+        if (!checkLimit()) return;
+
+        const btn = document.getElementById('generateBtn');
+        const banner = document.getElementById('error-banner');
+        banner.style.display = 'none';
+
+        // 入力値取得
+        const data = {
+            name: document.getElementById('appName').value,
+            url: document.getElementById('appUrl').value,
+            litePass: document.getElementById('litePass').value,
+            litePrice: document.querySelector('input[name="litePrice"]:checked').value,
+            proUrl: document.getElementById('proUrl').value,
+            proPrice: document.getElementById('proPrice').value,
+            target: document.querySelector('input[name="target"]:checked').value,
+            pain: document.getElementById('painPoint').value,
+            benefit: document.getElementById('benefit').value,
+            tone: document.querySelector('input[name="tone"]:checked').value
+        };
+
+        if (!data.name || !data.url || !data.pain || !data.benefit) {
+            alert('必須項目を入力してください');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = '✨ 生成中...';
+        document.getElementById('loading').style.display = 'flex';
+
+        const prompt = `あなたは売れるnote記事を書くプロライターです。
+以下の情報を元に、noteの「無料パート」と「有料パート」を生成してください。
+ターゲット：${data.target}
+解決する悩み：${data.pain}
+アプリで叶うこと：${data.benefit}
+文体：${data.tone}
+
+【出力形式】
+JSON形式で出力してください。キーは "free" と "paid" です。
+
+"free"の内容構成：
+1. 共感の入口(300-400字)
+2. 課題の言語化
+3. 解決の方向性提示
+4. アプリ紹介（${data.name}・特徴）
+5. 使用例の冒頭（続きは購入後...で切る）
+6. お客様の声テンプレ2件
+7. タイトル案3つ
+8. 推奨ハッシュタグ6個
+
+"paid"の内容構成：
+1. 購入お礼
+2. アプリURL：${data.url}
+3. パスワード：${data.litePass}
+4. 使い方ガイド3ステップ
+5. よくある質問3つ
+6. Pro版への導線（URLがあれば：${data.proUrl}、価格：${data.proPrice}）
+7. 結びのメッセージ`;
+
+        try {
+            const response = await fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: MODEL,
+                    max_tokens: MAX_TOKENS,
+                    messages: [{ role: 'user', content: prompt }]
+                })
+            });
+
+            if (!response.ok) throw new Error('API Error');
+
+            const result = await response.json();
+            // 注意：実際のAPI経由ではパース処理が必要になる場合があります
+            // ここではモックまたはAPI返却値を想定して処理
+            const content = JSON.parse(result.choices[0].message.content);
+
+            document.getElementById('output-free').innerText = content.free;
+            document.getElementById('output-paid').innerText = content.paid;
+
+            // 回数カウント
+            state.uses++;
+            localStorage.setItem('note_ureru_uses', state.uses);
+            updateBadge();
+
+        } catch (e) {
+            banner.innerText = '⚠️ 通信エラー。少し待って再度お試しください。';
+            banner.style.display = 'block';
+            console.error(e);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = '🚀 売れるnote記事を生成する';
+            document.getElementById('loading').style.display = 'none';
+        }
+    }
+
+    function copyContent(type) {
+        const text = document.getElementById(type === 'free' ? 'output-free' : 'output-paid').innerText;
+        const formatted = `════ ここからコピー開始 ════\n\n${text}\n\n════ ここまでコピー終了 ════`;
+        
+        navigator.clipboard.writeText(formatted).then(() => {
+            const btn = document.querySelector(`#${type}-content .copy-btn`);
+            const original = btn.innerText;
+            btn.innerText = '✓ コピーしました';
+            setTimeout(() => btn.innerText = original, 2000);
+        });
+    }
+
+    // イベントリスナー
+    document.getElementById('generateBtn').addEventListener('click', generate);
+    formFields.forEach(id => document.getElementById(id).addEventListener('input', saveDraft));
+    window.addEventListener('load', loadDraft);
+</script>
+
+</body>
+</html>
