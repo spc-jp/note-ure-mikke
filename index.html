@@ -166,6 +166,80 @@
             font-size: 0.95rem;
         }
 
+        /* Threads 3連投カード */
+        .threads-wrap { display: flex; flex-direction: column; gap: 16px; }
+        .thread-card {
+            background: #fafbff;
+            border: 1px solid #e0e7ff;
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+        }
+        .thread-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #c7d2fe;
+        }
+        .thread-num {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 0.95rem;
+        }
+        .thread-count {
+            font-size: 0.8rem;
+            color: #777;
+        }
+        .thread-count.over { color: var(--error); font-weight: 700; }
+        .thread-body {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            line-height: 1.7;
+            min-height: 80px;
+        }
+        .thread-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .thread-copy-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .thread-copy-btn:hover { opacity: 0.85; }
+        .thread-tip {
+            background: #fff8e1;
+            border-left: 3px solid var(--accent);
+            padding: 10px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #5d4e1a;
+            margin-bottom: 14px;
+            line-height: 1.6;
+        }
+        .copy-all-btn {
+            background: var(--accent);
+            color: var(--primary);
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 12px;
+        }
+
         /* Loading */
         .loading { display: flex; justify-content: center; align-items: center; padding: 40px; }
         .dot { width: 8px; height: 8px; margin: 0 4px; background: var(--primary); border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
@@ -293,8 +367,9 @@
     <!-- Output Area -->
     <div class="card">
         <div class="tabs">
-            <div class="tab active" onclick="switchTab('free')">📖 note無料パート</div>
-            <div class="tab" onclick="switchTab('paid')">🔒 note有料パート</div>
+            <div class="tab active" onclick="switchTab('free')">📖 note無料</div>
+            <div class="tab" onclick="switchTab('paid')">🔒 note有料</div>
+            <div class="tab" onclick="switchTab('threads')">🧵 Threads</div>
         </div>
 
         <div id="loading" class="loading" style="display:none;">
@@ -309,6 +384,47 @@
         <div id="paid-content" class="tab-content">
             <button class="copy-btn" onclick="copyContent('paid')">📋 コピー</button>
             <div id="output-paid" class="output-box">有料パートの内容が表示されます。</div>
+        </div>
+
+        <div id="threads-content" class="tab-content">
+            <div class="thread-tip">
+                💡 Threadsの3連投スレッドです。同じ時刻に「投稿1」を投稿後、それに「返信」する形で投稿2・3を続けてください。1スレッドが物語のように繋がります。
+            </div>
+            <button class="copy-all-btn" onclick="copyAllThreads()">📋 全部まとめてコピー</button>
+            <div class="threads-wrap">
+                <div class="thread-card">
+                    <div class="thread-header">
+                        <div class="thread-num">🧵 投稿1（フック・共感）</div>
+                        <div class="thread-count" id="count-thread1">0 / 500字</div>
+                    </div>
+                    <div class="thread-body" id="output-thread1">投稿1の内容がここに表示されます。</div>
+                    <div class="thread-actions">
+                        <button class="thread-copy-btn" onclick="copyThread(1)">📋 投稿1をコピー</button>
+                    </div>
+                </div>
+
+                <div class="thread-card">
+                    <div class="thread-header">
+                        <div class="thread-num">🧵 投稿2（深化・展開）</div>
+                        <div class="thread-count" id="count-thread2">0 / 500字</div>
+                    </div>
+                    <div class="thread-body" id="output-thread2">投稿2の内容がここに表示されます。</div>
+                    <div class="thread-actions">
+                        <button class="thread-copy-btn" onclick="copyThread(2)">📋 投稿2をコピー</button>
+                    </div>
+                </div>
+
+                <div class="thread-card">
+                    <div class="thread-header">
+                        <div class="thread-num">🧵 投稿3(解決・CTA)</div>
+                        <div class="thread-count" id="count-thread3">0 / 500字</div>
+                    </div>
+                    <div class="thread-body" id="output-thread3">投稿3の内容がここに表示されます。</div>
+                    <div class="thread-actions">
+                        <button class="thread-copy-btn" onclick="copyThread(3)">📋 投稿3をコピー</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -326,10 +442,9 @@
 
 <script>
     // --- 定数と設定 ---
-    
-const API_ENDPOINT = 'https://sozoku-mikke.yymmatsu.workers.dev';
+    const API_ENDPOINT = 'https://your-worker.workers.dev'; // ←Cloudflare Worker URLに差し替え
     const MODEL = 'claude-sonnet-4-6';
-    const MAX_TOKENS = 8000;
+    const MAX_TOKENS = 12000;
 
     const NOTE_URL   = 'https://note.com/_yoshibon/n/note-ureru-mikke';   // ←note記事URLに差し替え
     const STRIPE_URL = 'https://buy.stripe.com/your-stripe-link';         // ←Stripe決済URLに差し替え
@@ -465,14 +580,78 @@ const API_ENDPOINT = 'https://sozoku-mikke.yymmatsu.workers.dev';
     function switchTab(type) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        
-        if (type === 'free') {
-            document.querySelectorAll('.tab')[0].classList.add('active');
-            document.getElementById('free-content').classList.add('active');
-        } else {
-            document.querySelectorAll('.tab')[1].classList.add('active');
-            document.getElementById('paid-content').classList.add('active');
+
+        const tabMap = { 'free': 0, 'paid': 1, 'threads': 2 };
+        const idx = tabMap[type];
+        if (idx !== undefined) {
+            document.querySelectorAll('.tab')[idx].classList.add('active');
         }
+
+        const contentId = type + '-content';
+        const contentEl = document.getElementById(contentId);
+        if (contentEl) contentEl.classList.add('active');
+    }
+
+    // Threads投稿を反映＋文字数カウント
+    function updateThreadBox(num, text) {
+        const body = document.getElementById('output-thread' + num);
+        const count = document.getElementById('count-thread' + num);
+        if (!body || !count) return;
+
+        const content = text || `投稿${num}の内容がここに表示されます。`;
+        body.innerText = content;
+
+        const len = text ? text.length : 0;
+        count.innerText = `${len} / 500字`;
+        if (len > 500) {
+            count.classList.add('over');
+        } else {
+            count.classList.remove('over');
+        }
+    }
+
+    // 個別Threads投稿のコピー
+    function copyThread(num) {
+        const text = document.getElementById('output-thread' + num).innerText;
+        const formatted = `════ ここからコピー開始 ════\n\n${text}\n\n════ ここまでコピー終了 ════`;
+        navigator.clipboard.writeText(formatted).then(() => {
+            const btn = event.target;
+            const original = btn.innerText;
+            btn.innerText = '✓ コピーしました';
+            setTimeout(() => btn.innerText = original, 2000);
+        });
+    }
+
+    // 3連投を全部まとめてコピー
+    function copyAllThreads() {
+        const t1 = document.getElementById('output-thread1').innerText;
+        const t2 = document.getElementById('output-thread2').innerText;
+        const t3 = document.getElementById('output-thread3').innerText;
+
+        const formatted =
+`════ ここからコピー開始 ════
+
+【Threads 投稿1】
+${t1}
+
+────────────────
+
+【Threads 投稿2】
+${t2}
+
+────────────────
+
+【Threads 投稿3】
+${t3}
+
+════ ここまでコピー終了 ════`;
+
+        navigator.clipboard.writeText(formatted).then(() => {
+            const btn = event.target;
+            const original = btn.innerText;
+            btn.innerText = '✓ 全部コピーしました';
+            setTimeout(() => btn.innerText = original, 2000);
+        });
     }
 
     // --- 生成ロジック ---
@@ -506,9 +685,9 @@ const API_ENDPOINT = 'https://sozoku-mikke.yymmatsu.workers.dev';
         btn.innerText = '✨ 生成中...';
         document.getElementById('loading').style.display = 'flex';
 
-        const prompt = `あなたは売れるnote記事を書くプロのコピーライターです。
+        const prompt = `あなたは売れるnote記事＋Threads投稿を書くプロのコピーライターです。
 
-以下の情報を元に、noteの「無料パート」と「有料パート」を生成してください。
+以下の情報を元に、note記事（無料・有料）と、Threadsの3連投スレッドを生成してください。
 
 ターゲット：${data.target}
 解決する悩み：${data.pain}
@@ -517,16 +696,22 @@ const API_ENDPOINT = 'https://sozoku-mikke.yymmatsu.workers.dev';
 アプリ名：${data.name}
 
 【重要・必ず守る出力形式】
-以下の3つのマーカーで区切って出力してください。
+以下の5つのマーカーで区切って出力してください。
 マーカー以外の前置き・後書き・説明は一切不要です。
 
 ===FREE===
 （ここに無料パート全文を書く）
 ===PAID===
 （ここに有料パート全文を書く）
+===THREAD1===
+(ここにThreads投稿1を書く・必ず500字以内)
+===THREAD2===
+(ここにThreads投稿2を書く・必ず500字以内)
+===THREAD3===
+(ここにThreads投稿3を書く・必ず500字以内)
 ===END===
 
-【無料パート】の内容構成（順番通りに、見出し付きで自然な流れで）：
+【無料パート】の内容構成（順番通りに）：
 1. 共感の入口（300-400字）
 2. 課題の言語化
 3. 解決の方向性提示
@@ -536,7 +721,7 @@ const API_ENDPOINT = 'https://sozoku-mikke.yymmatsu.workers.dev';
 7. タイトル案3つ（A/Bテスト用）
 8. 推奨ハッシュタグ6個
 
-【有料パート】の内容構成（順番通りに、見出し付きで自然な流れで）：
+【有料パート】の内容構成（順番通りに）：
 1. 購入お礼メッセージ
 2. アプリURL：${data.url}
 3. ライト版アクセスパスワード：${data.litePass}
@@ -544,6 +729,38 @@ const API_ENDPOINT = 'https://sozoku-mikke.yymmatsu.workers.dev';
 5. よくある質問3つ（Q&A形式）
 6. Pro版への自然な導線（${data.proUrl ? 'Pro版URL：' + data.proUrl + '、価格：' + data.proPrice : 'Pro版あり：' + data.proPrice}）
 7. 結びのメッセージ
+
+【Threads3連投スレッド】の作成ルール（最重要）：
+
+このスレッドは「同じ時刻に3つを連投して、1つの物語として読ませる」形式です。
+読者がスレッドを開いて最後まで読み切る構造を作ってください。
+
+▼投稿1（フック・共感）500字以内
+- 1〜2行目で読者の心をつかむ印象的な書き出し
+- ターゲットの「あるある」体験を具体的に描写
+- 「続きが気になる…」と思わせて末尾を「（続）」で切る
+- 文体：${data.tone}を反映
+
+▼投稿2（深化・展開）500字以内
+- 「（続き）」で始める
+- 投稿1の悩みをさらに深掘り
+- 「あ、これ私のことだ」と共感を強める
+- 末尾は「（続）」で切る
+- 解決策はまだ出さない
+
+▼投稿3（解決・CTA）500字以内
+- 「（続き）」で始める
+- ${data.name}を自然に紹介
+- 具体的な使い方やベネフィットを1〜2個
+- 末尾に「詳細はプロフィール欄から」「note記事をご覧ください」等のCTA
+- 最後にハッシュタグ3〜4個（半角#）
+
+【全体の注意】
+- 改行は適度に入れる（読みやすさ重視）
+- 絵文字は1投稿あたり1〜3個まで
+- 各投稿500字を絶対に超えない
+- 説教くさくない、温かい語り口
+- ${data.target}に響く言葉選び
 
 それでは ===FREE=== から始めてください。`;
 
@@ -562,28 +779,45 @@ const API_ENDPOINT = 'https://sozoku-mikke.yymmatsu.workers.dev';
 
             const result = await response.json();
 
-            // === Anthropic API レスポンス処理（マーカー方式・堅牢版） ===
+            // === Anthropic API レスポンス処理（マーカー方式・5セクション対応） ===
             // 1. テキスト抽出
             const rawText = result.content[0].text || '';
 
             // 2. マーカーで分割
-            // ===FREE=== ... ===PAID=== ... ===END===
+            // ===FREE=== ... ===PAID=== ... ===THREAD1=== ... ===THREAD2=== ... ===THREAD3=== ... ===END===
+            const markers = ['===FREE===', '===PAID===', '===THREAD1===', '===THREAD2===', '===THREAD3===', '===END==='];
+            const positions = markers.map(m => rawText.indexOf(m));
+
             let freeContent = '';
             let paidContent = '';
+            let thread1 = '';
+            let thread2 = '';
+            let thread3 = '';
 
-            const freeStart = rawText.indexOf('===FREE===');
-            const paidStart = rawText.indexOf('===PAID===');
-            const endMark   = rawText.indexOf('===END===');
+            // セクション抽出ヘルパー
+            function extractSection(startMarkerIdx, endMarkerIdx) {
+                const startPos = positions[startMarkerIdx];
+                if (startPos === -1) return '';
+                let endPos = -1;
+                // 次に見つかるマーカーを探す
+                for (let i = startMarkerIdx + 1; i < positions.length; i++) {
+                    if (positions[i] !== -1) {
+                        endPos = positions[i];
+                        break;
+                    }
+                }
+                if (endPos === -1) endPos = rawText.length;
+                return rawText.substring(startPos + markers[startMarkerIdx].length, endPos).trim();
+            }
 
-            if (freeStart !== -1 && paidStart !== -1) {
-                // FREEパート抽出（===FREE=== の後 〜 ===PAID=== の前）
-                freeContent = rawText.substring(freeStart + 10, paidStart).trim();
+            freeContent = extractSection(0);
+            paidContent = extractSection(1);
+            thread1 = extractSection(2);
+            thread2 = extractSection(3);
+            thread3 = extractSection(4);
 
-                // PAIDパート抽出（===PAID=== の後 〜 ===END===の前 or 末尾）
-                const paidEnd = (endMark !== -1) ? endMark : rawText.length;
-                paidContent = rawText.substring(paidStart + 10, paidEnd).trim();
-            } else {
-                // マーカーが見つからない場合のフォールバック
+            // マーカーが全く見つからない場合のフォールバック
+            if (positions[0] === -1 && positions[1] === -1) {
                 console.warn('Markers not found, raw output:', rawText.substring(0, 200));
                 freeContent = rawText;
                 paidContent = '（マーカーが見つかりませんでした。再生成をお試しください）';
@@ -596,6 +830,11 @@ const API_ENDPOINT = 'https://sozoku-mikke.yymmatsu.workers.dev';
             // 3. 出力反映
             document.getElementById('output-free').innerText = freeContent || '（無料パートの生成に失敗しました）';
             document.getElementById('output-paid').innerText = paidContent || '（有料パートの生成に失敗しました）';
+
+            // Threads 3連投の反映＋文字数カウント
+            updateThreadBox(1, thread1);
+            updateThreadBox(2, thread2);
+            updateThreadBox(3, thread3);
 
             // 回数カウント（Pro版以外）
             if (state.license !== 'pro') {
