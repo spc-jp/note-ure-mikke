@@ -326,10 +326,9 @@
 
 <script>
     // --- 定数と設定 ---
-    
-const API_ENDPOINT = 'https://sozoku-mikke.yymmatsu.workers.dev';
+    const API_ENDPOINT = 'https://your-worker.workers.dev'; // ←Cloudflare Worker URLに差し替え
     const MODEL = 'claude-sonnet-4-6';
-    const MAX_TOKENS = 3000;
+    const MAX_TOKENS = 8000;
 
     const NOTE_URL   = 'https://note.com/_yoshibon/n/note-ureru-mikke';   // ←note記事URLに差し替え
     const STRIPE_URL = 'https://buy.stripe.com/your-stripe-link';         // ←Stripe決済URLに差し替え
@@ -513,6 +512,8 @@ const API_ENDPOINT = 'https://sozoku-mikke.yymmatsu.workers.dev';
 - 前置き、説明、マークダウン記法（\`\`\`json）は一切含めない
 - 出力は必ず { で始まり } で終わる
 - JSON内の改行は \\n を使用
+- ダブルクォートはエスケープ \\" を使用
+- "free"は2000文字以内、"paid"は1500文字以内に必ず収める
 
 以下の情報を元に、noteの「無料パート」と「有料パート」を生成してください。
 
@@ -524,28 +525,28 @@ const API_ENDPOINT = 'https://sozoku-mikke.yymmatsu.workers.dev';
 
 【出力形式】
 {
-  "free": "無料パートの全文（下記8項目を含む文字列）",
-  "paid": "有料パートの全文（下記7項目を含む文字列）"
+  "free": "無料パートの全文（2000文字以内）",
+  "paid": "有料パートの全文（1500文字以内）"
 }
 
-"free"の内容構成（順番通りに、見出し付きで自然な流れで）：
-1. 共感の入口（300-400字）
-2. 課題の言語化
-3. 解決の方向性提示
-4. アプリ紹介（${data.name}・特徴）
-5. 使用例の冒頭（途中で「続きは購入後」で切る）
-6. お客様の声テンプレ2件
+"free"の内容構成（簡潔に・順番通りに）：
+1. 共感の入口（300字）
+2. 課題の言語化（200字）
+3. 解決の方向性（150字）
+4. アプリ紹介（${data.name}・特徴）（200字）
+5. 使用例の冒頭（途中で「続きは購入後」で切る）（300字）
+6. お客様の声テンプレ2件（各100字）
 7. タイトル案3つ（A/Bテスト用）
 8. 推奨ハッシュタグ6個
 
-"paid"の内容構成（順番通りに、見出し付きで自然な流れで）：
-1. 購入お礼メッセージ
+"paid"の内容構成（簡潔に・順番通りに）：
+1. 購入お礼メッセージ（100字）
 2. アプリURL：${data.url}
 3. ライト版アクセスパスワード：${data.litePass}
-4. 使い方ガイド3ステップ
-5. よくある質問3つ（Q&A形式）
+4. 使い方ガイド3ステップ（各100字）
+5. よくある質問3つ（Q&A形式・各80字）
 6. Pro版への自然な導線（${data.proUrl ? 'Pro版URL：' + data.proUrl + '、価格：' + data.proPrice : 'Pro版あり：' + data.proPrice}）
-7. 結びのメッセージ`;
+7. 結びのメッセージ（100字）`;
 
         try {
             const response = await fetch(API_ENDPOINT, {
@@ -576,8 +577,26 @@ const API_ENDPOINT = 'https://sozoku-mikke.yymmatsu.workers.dev';
                 rawText = rawText.substring(jsonStart, jsonEnd + 1);
             }
 
-            // 4. JSONパース
-            const content = JSON.parse(rawText);
+            // 4. JSONパース（失敗時はフォールバック）
+            let content;
+            try {
+                content = JSON.parse(rawText);
+            } catch (parseErr) {
+                // JSON破損時の救済処理：正規表現でfree/paidを抽出
+                console.warn('JSON parse failed, attempting fallback extraction', parseErr);
+
+                const freeMatch = rawText.match(/"free"\s*:\s*"((?:[^"\\]|\\.)*)/);
+                const paidMatch = rawText.match(/"paid"\s*:\s*"((?:[^"\\]|\\.)*)/);
+
+                content = {
+                    free: freeMatch ? freeMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : '（生成途中で切れました。再生成をお試しください）',
+                    paid: paidMatch ? paidMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : '（生成途中で切れました。再生成をお試しください）'
+                };
+
+                banner.innerText = '⚠️ 一部出力が途中で切れた可能性があります。内容を確認してください。';
+                banner.style.display = 'block';
+                banner.style.background = '#f39c12';
+            }
 
             // 5. 出力反映
             document.getElementById('output-free').innerText = content.free || '（無料パートの生成に失敗しました）';
