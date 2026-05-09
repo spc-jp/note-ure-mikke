@@ -319,38 +319,19 @@
 
 <!-- Paywall Overlay -->
 <div id="paywall">
-    <div class="paywall-card">
-        <h3>✨ 生成回数の上限に達しました</h3>
-        <p style="font-size:0.9rem; color:#666; margin:10px 0;">継続して利用するにはプランをお選びください</p>
-        
-        <div class="plan-grid">
-            <div class="plan-box">
-                <h4>🌿 ライト版</h4>
-                <p style="font-size:1.2rem; font-weight:bold;">¥1,980</p>
-                <p style="font-size:0.75rem;">50回生成可能</p>
-                <a href="#" style="display:block; margin-top:10px; color:var(--primary); font-weight:bold;">noteで購入</a>
-            </div>
-            <div class="plan-box featured">
-                <h4>✨ Pro版</h4>
-                <p style="font-size:1.2rem; font-weight:bold;">¥4,980/月</p>
-                <p style="font-size:0.75rem;">無制限生成</p>
-                <a href="#" style="display:block; margin-top:10px; color:var(--accent); font-weight:bold;">Stripeで登録</a>
-            </div>
-        </div>
-
-        <div class="unlock-area">
-            <p style="font-size:0.85rem; margin-bottom:10px;">すでにご購入の方</p>
-            <input type="text" id="licenseKey" placeholder="解除パスワードを入力" style="margin-bottom:10px;">
-            <button class="btn-primary" onclick="unlock()" style="padding:10px;">解除する</button>
-        </div>
+    <div class="paywall-card" id="paywallCard">
+        <!-- 内容はJSで動的生成 -->
     </div>
 </div>
 
 <script>
     // --- 定数と設定 ---
-    const API_ENDPOINT = 'https://your-worker.workers.dev'; 
-    const MODEL = 'claude-sonnet-4-5-20250929';
+    const API_ENDPOINT = 'https://your-worker.workers.dev'; // ←Cloudflare Worker URLに差し替え
+    const MODEL = 'claude-sonnet-4-6';
     const MAX_TOKENS = 3000;
+
+    const NOTE_URL   = 'https://note.com/_yoshibon/n/note-ureru-mikke';   // ←note記事URLに差し替え
+    const STRIPE_URL = 'https://buy.stripe.com/your-stripe-link';         // ←Stripe決済URLに差し替え
 
     const FREE_LIMIT = 3;
     const LITE_LIMIT = 50;
@@ -396,22 +377,86 @@
         if (state.license === 'pro') return true;
         if (state.license === 'lite' && state.uses < LITE_LIMIT) return true;
         if (state.license === 'none' && state.uses < FREE_LIMIT) return true;
-        
+
+        renderPaywall();
         document.getElementById('paywall').style.display = 'flex';
         return false;
     }
 
+    function renderPaywall() {
+        const card = document.getElementById('paywallCard');
+
+        // ライト版で50回到達 → Pro版誘導専用UI
+        if (state.license === 'lite') {
+            card.innerHTML = `
+                <h3>🌱 ライト版50回ご利用ありがとうございました</h3>
+                <p style="font-size:0.9rem; color:#666; margin:10px 0;">引き続きご利用にはPro版へのアップグレードをご検討ください</p>
+                <div class="plan-grid" style="grid-template-columns: 1fr;">
+                    <div class="plan-box featured">
+                        <h4>✨ Pro版</h4>
+                        <p style="font-size:1.2rem; font-weight:bold;">¥4,980/月</p>
+                        <p style="font-size:0.75rem;">無制限生成・解約自由</p>
+                        <a href="${STRIPE_URL}" target="_blank" style="display:block; margin-top:10px; color:var(--accent); font-weight:bold;">Stripeで登録</a>
+                    </div>
+                </div>
+                <div class="unlock-area">
+                    <p style="font-size:0.85rem; margin-bottom:10px;">Pro版パスワードをお持ちの方</p>
+                    <input type="text" id="licenseKey" placeholder="解除パスワードを入力" style="margin-bottom:10px;">
+                    <button class="btn-primary" onclick="unlock()" style="padding:10px;">解除する</button>
+                </div>
+                <button onclick="closePaywall()" style="background:none;border:none;color:#999;margin-top:14px;cursor:pointer;text-decoration:underline;">閉じる</button>
+            `;
+            return;
+        }
+
+        // 未購入（none）→ 2択UI
+        const litePrice = (document.querySelector('input[name="litePrice"]:checked') || {}).value || '¥980';
+        const proPrice = (document.getElementById('proPrice') || {}).value || '¥4,980/月';
+
+        card.innerHTML = `
+            <h3>🔓 無料体験が終了しました</h3>
+            <p style="font-size:0.9rem; color:#666; margin:10px 0;">ご購入方法をお選びください</p>
+            <div class="plan-grid">
+                <div class="plan-box">
+                    <h4>🌿 ライト版</h4>
+                    <p style="font-size:1.2rem; font-weight:bold;">${litePrice}</p>
+                    <p style="font-size:0.75rem;">50回まで利用可</p>
+                    <a href="${NOTE_URL}" target="_blank" style="display:block; margin-top:10px; color:var(--primary); font-weight:bold;">noteで購入</a>
+                </div>
+                <div class="plan-box featured">
+                    <h4>✨ Pro版</h4>
+                    <p style="font-size:1.2rem; font-weight:bold;">${proPrice}</p>
+                    <p style="font-size:0.75rem;">無制限生成</p>
+                    <a href="${STRIPE_URL}" target="_blank" style="display:block; margin-top:10px; color:var(--accent); font-weight:bold;">Stripeで登録</a>
+                </div>
+            </div>
+            <div class="unlock-area">
+                <p style="font-size:0.85rem; margin-bottom:10px;">すでにご購入の方</p>
+                <input type="text" id="licenseKey" placeholder="解除パスワードを入力" style="margin-bottom:10px;">
+                <button class="btn-primary" onclick="unlock()" style="padding:10px;">解除する</button>
+            </div>
+            <button onclick="closePaywall()" style="background:none;border:none;color:#999;margin-top:14px;cursor:pointer;text-decoration:underline;">閉じる</button>
+        `;
+    }
+
+    function closePaywall() {
+        document.getElementById('paywall').style.display = 'none';
+    }
+
     function unlock() {
-        const key = document.getElementById('licenseKey').value;
+        const key = document.getElementById('licenseKey').value.trim();
         if (key === PRO_PASS) {
             state.license = 'pro';
+            localStorage.setItem('note_ureru_license', 'pro');
         } else if (key === LITE_PASS) {
             state.license = 'lite';
+            state.uses = 0; // ライト版開始時に回数リセット（50回フル利用可）
+            localStorage.setItem('note_ureru_license', 'lite');
+            localStorage.setItem('note_ureru_uses', '0');
         } else {
             alert('パスワードが正しくありません');
             return;
         }
-        localStorage.setItem('note_ureru_license', state.license);
         document.getElementById('paywall').style.display = 'none';
         updateBadge();
     }
@@ -460,33 +505,45 @@
         btn.innerText = '✨ 生成中...';
         document.getElementById('loading').style.display = 'flex';
 
-        const prompt = `あなたは売れるnote記事を書くプロライターです。
+        const prompt = `あなたは売れるnote記事を書くプロのコピーライターです。
+
+【重要・必ず守ること】
+- 出力は純粋なJSONオブジェクトのみ
+- 前置き、説明、マークダウン記法（\`\`\`json）は一切含めない
+- 出力は必ず { で始まり } で終わる
+- JSON内の改行は \\n を使用
+
 以下の情報を元に、noteの「無料パート」と「有料パート」を生成してください。
+
 ターゲット：${data.target}
 解決する悩み：${data.pain}
 アプリで叶うこと：${data.benefit}
 文体：${data.tone}
+アプリ名：${data.name}
 
 【出力形式】
-JSON形式で出力してください。キーは "free" と "paid" です。
+{
+  "free": "無料パートの全文（下記8項目を含む文字列）",
+  "paid": "有料パートの全文（下記7項目を含む文字列）"
+}
 
-"free"の内容構成：
-1. 共感の入口(300-400字)
+"free"の内容構成（順番通りに、見出し付きで自然な流れで）：
+1. 共感の入口（300-400字）
 2. 課題の言語化
 3. 解決の方向性提示
 4. アプリ紹介（${data.name}・特徴）
-5. 使用例の冒頭（続きは購入後...で切る）
+5. 使用例の冒頭（途中で「続きは購入後」で切る）
 6. お客様の声テンプレ2件
-7. タイトル案3つ
+7. タイトル案3つ（A/Bテスト用）
 8. 推奨ハッシュタグ6個
 
-"paid"の内容構成：
-1. 購入お礼
+"paid"の内容構成（順番通りに、見出し付きで自然な流れで）：
+1. 購入お礼メッセージ
 2. アプリURL：${data.url}
-3. パスワード：${data.litePass}
+3. ライト版アクセスパスワード：${data.litePass}
 4. 使い方ガイド3ステップ
-5. よくある質問3つ
-6. Pro版への導線（URLがあれば：${data.proUrl}、価格：${data.proPrice}）
+5. よくある質問3つ（Q&A形式）
+6. Pro版への自然な導線（${data.proUrl ? 'Pro版URL：' + data.proUrl + '、価格：' + data.proPrice : 'Pro版あり：' + data.proPrice}）
 7. 結びのメッセージ`;
 
         try {
@@ -500,23 +557,40 @@ JSON形式で出力してください。キーは "free" と "paid" です。
                 })
             });
 
-            if (!response.ok) throw new Error('API Error');
+            if (!response.ok) throw new Error('API Error: ' + response.status);
 
             const result = await response.json();
-            // 注意：実際のAPI経由ではパース処理が必要になる場合があります
-            // ここではモックまたはAPI返却値を想定して処理
-            const content = JSON.parse(result.choices[0].message.content);
 
-            document.getElementById('output-free').innerText = content.free;
-            document.getElementById('output-paid').innerText = content.paid;
+            // === Anthropic API レスポンス処理（安全版） ===
+            // 1. テキスト抽出
+            let rawText = result.content[0].text.trim();
 
-            // 回数カウント
-            state.uses++;
-            localStorage.setItem('note_ureru_uses', state.uses);
-            updateBadge();
+            // 2. マークダウンの```json```フェンスを除去
+            rawText = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '');
+
+            // 3. 最初の{から最後の}までを抽出（前置き等のノイズ除去）
+            const jsonStart = rawText.indexOf('{');
+            const jsonEnd = rawText.lastIndexOf('}');
+            if (jsonStart !== -1 && jsonEnd !== -1) {
+                rawText = rawText.substring(jsonStart, jsonEnd + 1);
+            }
+
+            // 4. JSONパース
+            const content = JSON.parse(rawText);
+
+            // 5. 出力反映
+            document.getElementById('output-free').innerText = content.free || '（無料パートの生成に失敗しました）';
+            document.getElementById('output-paid').innerText = content.paid || '（有料パートの生成に失敗しました）';
+
+            // 回数カウント（Pro版以外）
+            if (state.license !== 'pro') {
+                state.uses++;
+                localStorage.setItem('note_ureru_uses', state.uses);
+                updateBadge();
+            }
 
         } catch (e) {
-            banner.innerText = '⚠️ 通信エラー。少し待って再度お試しください。';
+            banner.innerText = '⚠️ 通信エラーまたは生成失敗。少し待ってから再度お試しください。';
             banner.style.display = 'block';
             console.error(e);
         } finally {
