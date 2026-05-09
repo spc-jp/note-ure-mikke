@@ -507,14 +507,6 @@
 
         const prompt = `あなたは売れるnote記事を書くプロのコピーライターです。
 
-【重要・必ず守ること】
-- 出力は純粋なJSONオブジェクトのみ
-- 前置き、説明、マークダウン記法（\`\`\`json）は一切含めない
-- 出力は必ず { で始まり } で終わる
-- JSON内の改行は \\n を使用
-- ダブルクォートはエスケープ \\" を使用
-- "free"は2000文字以内、"paid"は1500文字以内に必ず収める
-
 以下の情報を元に、noteの「無料パート」と「有料パート」を生成してください。
 
 ターゲット：${data.target}
@@ -523,30 +515,36 @@
 文体：${data.tone}
 アプリ名：${data.name}
 
-【出力形式】
-{
-  "free": "無料パートの全文（2000文字以内）",
-  "paid": "有料パートの全文（1500文字以内）"
-}
+【重要・必ず守る出力形式】
+以下の3つのマーカーで区切って出力してください。
+マーカー以外の前置き・後書き・説明は一切不要です。
 
-"free"の内容構成（簡潔に・順番通りに）：
-1. 共感の入口（300字）
-2. 課題の言語化（200字）
-3. 解決の方向性（150字）
-4. アプリ紹介（${data.name}・特徴）（200字）
-5. 使用例の冒頭（途中で「続きは購入後」で切る）（300字）
-6. お客様の声テンプレ2件（各100字）
+===FREE===
+（ここに無料パート全文を書く）
+===PAID===
+（ここに有料パート全文を書く）
+===END===
+
+【無料パート】の内容構成（順番通りに、見出し付きで自然な流れで）：
+1. 共感の入口（300-400字）
+2. 課題の言語化
+3. 解決の方向性提示
+4. アプリ紹介（${data.name}・特徴）
+5. 使用例の冒頭（途中で「続きは購入後」で切る）
+6. お客様の声テンプレ2件
 7. タイトル案3つ（A/Bテスト用）
 8. 推奨ハッシュタグ6個
 
-"paid"の内容構成（簡潔に・順番通りに）：
-1. 購入お礼メッセージ（100字）
+【有料パート】の内容構成（順番通りに、見出し付きで自然な流れで）：
+1. 購入お礼メッセージ
 2. アプリURL：${data.url}
 3. ライト版アクセスパスワード：${data.litePass}
-4. 使い方ガイド3ステップ（各100字）
-5. よくある質問3つ（Q&A形式・各80字）
+4. 使い方ガイド3ステップ
+5. よくある質問3つ（Q&A形式）
 6. Pro版への自然な導線（${data.proUrl ? 'Pro版URL：' + data.proUrl + '、価格：' + data.proPrice : 'Pro版あり：' + data.proPrice}）
-7. 結びのメッセージ（100字）`;
+7. 結びのメッセージ
+
+それでは ===FREE=== から始めてください。`;
 
         try {
             const response = await fetch(API_ENDPOINT, {
@@ -563,44 +561,40 @@
 
             const result = await response.json();
 
-            // === Anthropic API レスポンス処理（安全版） ===
+            // === Anthropic API レスポンス処理（マーカー方式・堅牢版） ===
             // 1. テキスト抽出
-            let rawText = result.content[0].text.trim();
+            const rawText = result.content[0].text || '';
 
-            // 2. マークダウンの```json```フェンスを除去
-            rawText = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '');
+            // 2. マーカーで分割
+            // ===FREE=== ... ===PAID=== ... ===END===
+            let freeContent = '';
+            let paidContent = '';
 
-            // 3. 最初の{から最後の}までを抽出（前置き等のノイズ除去）
-            const jsonStart = rawText.indexOf('{');
-            const jsonEnd = rawText.lastIndexOf('}');
-            if (jsonStart !== -1 && jsonEnd !== -1) {
-                rawText = rawText.substring(jsonStart, jsonEnd + 1);
-            }
+            const freeStart = rawText.indexOf('===FREE===');
+            const paidStart = rawText.indexOf('===PAID===');
+            const endMark   = rawText.indexOf('===END===');
 
-            // 4. JSONパース（失敗時はフォールバック）
-            let content;
-            try {
-                content = JSON.parse(rawText);
-            } catch (parseErr) {
-                // JSON破損時の救済処理：正規表現でfree/paidを抽出
-                console.warn('JSON parse failed, attempting fallback extraction', parseErr);
+            if (freeStart !== -1 && paidStart !== -1) {
+                // FREEパート抽出（===FREE=== の後 〜 ===PAID=== の前）
+                freeContent = rawText.substring(freeStart + 10, paidStart).trim();
 
-                const freeMatch = rawText.match(/"free"\s*:\s*"((?:[^"\\]|\\.)*)/);
-                const paidMatch = rawText.match(/"paid"\s*:\s*"((?:[^"\\]|\\.)*)/);
+                // PAIDパート抽出（===PAID=== の後 〜 ===END===の前 or 末尾）
+                const paidEnd = (endMark !== -1) ? endMark : rawText.length;
+                paidContent = rawText.substring(paidStart + 10, paidEnd).trim();
+            } else {
+                // マーカーが見つからない場合のフォールバック
+                console.warn('Markers not found, raw output:', rawText.substring(0, 200));
+                freeContent = rawText;
+                paidContent = '（マーカーが見つかりませんでした。再生成をお試しください）';
 
-                content = {
-                    free: freeMatch ? freeMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : '（生成途中で切れました。再生成をお試しください）',
-                    paid: paidMatch ? paidMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : '（生成途中で切れました。再生成をお試しください）'
-                };
-
-                banner.innerText = '⚠️ 一部出力が途中で切れた可能性があります。内容を確認してください。';
+                banner.innerText = '⚠️ 出力形式が想定と異なります。再生成をお試しください。';
                 banner.style.display = 'block';
                 banner.style.background = '#f39c12';
             }
 
-            // 5. 出力反映
-            document.getElementById('output-free').innerText = content.free || '（無料パートの生成に失敗しました）';
-            document.getElementById('output-paid').innerText = content.paid || '（有料パートの生成に失敗しました）';
+            // 3. 出力反映
+            document.getElementById('output-free').innerText = freeContent || '（無料パートの生成に失敗しました）';
+            document.getElementById('output-paid').innerText = paidContent || '（有料パートの生成に失敗しました）';
 
             // 回数カウント（Pro版以外）
             if (state.license !== 'pro') {
