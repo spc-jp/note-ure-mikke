@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>note売れみっけ | Smile Plus Consulting</title>
+    <title>みっけ売れスタジオ | Smile Plus Consulting</title>
     <link rel="icon" type="image/png" href="https://spc-jp.github.io/note-ure-mikke/favicon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -56,6 +56,35 @@
             border-radius: 20px;
             font-size: 0.85rem;
             font-weight: bold;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .switch-btn {
+            background: var(--accent);
+            color: var(--primary);
+            padding: 8px 14px;
+            border-radius: 22px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-decoration: none;
+            border: 2px solid var(--accent);
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .switch-btn:hover {
+            background: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(208,169,0,0.3);
+        }
+        @media (max-width: 480px) {
+            header { flex-direction: column; align-items: stretch; gap: 12px; }
+            .header-right { justify-content: space-between; }
+            .switch-btn { font-size: 0.78rem; padding: 6px 12px; }
         }
 
         /* Card Style */
@@ -240,6 +269,36 @@
             margin-bottom: 12px;
         }
 
+        /* 時間帯セクション */
+        .time-section {
+            background: white;
+            border: 1px solid #e8e8e8;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        .time-header {
+            font-family: 'Noto Serif JP', serif;
+            font-weight: 900;
+            color: var(--primary);
+            font-size: 1.05rem;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--accent);
+        }
+        .time-copy-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 18px;
+            padding: 6px 14px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 12px;
+        }
+        .time-copy-btn:hover { opacity: 0.85; }
+
         /* Loading */
         .loading { display: flex; justify-content: center; align-items: center; padding: 40px; }
         .dot { width: 8px; height: 8px; margin: 0 4px; background: var(--primary); border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
@@ -294,8 +353,13 @@
 
 <div class="container">
     <header>
-        <div class="logo">note売れ<span style="color:var(--accent)">みっけ</span></div>
-        <div id="usage-badge" class="badge">残り3回</div>
+        <div>
+            <div class="logo">みっけ売れ<span style="color:var(--accent)">スタジオ</span></div>
+            <p style="color:#666;font-size:0.85rem;margin-top:6px;">noteもSNSも、1クリックで14コンテンツを一気に生成 📖🧵🐦</p>
+        </div>
+        <div class="header-right">
+            <div id="usage-badge" class="badge">残り3回</div>
+        </div>
     </header>
 
     <div id="error-banner"></div>
@@ -305,24 +369,22 @@
         <h2>【基本情報】</h2>
         <div class="form-group">
             <label>アプリ名 *</label>
-            <input type="text" id="appName" placeholder="例：Vertical Rotation Master">
+            <input type="text" id="appName" placeholder="例：相続みっけ">
         </div>
         <div class="form-group">
             <label>アプリURL *</label>
             <input type="url" id="appUrl" placeholder="https://...">
         </div>
         <div class="form-group">
-            <label>ライト版パスワード *</label>
-            <input type="text" id="litePass" placeholder="購入者に配布するキー">
+            <label>note記事URL（任意）</label>
+            <input type="url" id="noteUrl" placeholder="https://note.com/...">
+            <p style="font-size:0.78rem;color:#888;margin-top:4px;">あればSNS投稿のCTAリンクとして組み込みます</p>
         </div>
+
+        <h2 style="margin-top:40px;">【note有料パート設定】</h2>
         <div class="form-group">
-            <label>ライト版価格</label>
-            <div class="radio-group">
-                <label class="radio-label"><input type="radio" name="litePrice" value="¥500"> ¥500</label>
-                <label class="radio-label"><input type="radio" name="litePrice" value="¥980" checked> ¥980</label>
-                <label class="radio-label"><input type="radio" name="litePrice" value="¥1,480"> ¥1,480</label>
-                <label class="radio-label"><input type="radio" name="litePrice" value="¥1,980"> ¥1,980</label>
-            </div>
+            <label>ライト版パスワード *</label>
+            <input type="text" id="litePass" placeholder="購入者に配布するキー（例：sozoku-lite-2k26）">
         </div>
         <div class="form-group">
             <label>Pro版URL（任意）</label>
@@ -361,7 +423,7 @@
             </div>
         </div>
 
-        <button id="generateBtn" class="btn-primary">🚀 売れるnote記事を生成する</button>
+        <button id="generateBtn" class="btn-primary">🚀 note記事＋SNS投稿を一気に生成する（14コンテンツ）</button>
     </div>
 
     <!-- Output Area -->
@@ -370,59 +432,184 @@
             <div class="tab active" onclick="switchTab('free')">📖 note無料</div>
             <div class="tab" onclick="switchTab('paid')">🔒 note有料</div>
             <div class="tab" onclick="switchTab('threads')">🧵 Threads</div>
+            <div class="tab" onclick="switchTab('x')">🐦 X</div>
         </div>
 
         <div id="loading" class="loading" style="display:none;">
             <div class="dot"></div><div class="dot"></div><div class="dot"></div>
         </div>
 
+        <!-- note無料 タブ -->
         <div id="free-content" class="tab-content active">
-            <button class="copy-btn" onclick="copyContent('free')">📋 コピー</button>
-            <div id="output-free" class="output-box">ここに生成結果が表示されます。</div>
+            <button class="copy-btn" onclick="copyOutputBox('free')">📋 コピー</button>
+            <div id="output-free" class="output-box">ここに無料パートが表示されます。</div>
         </div>
 
+        <!-- note有料 タブ -->
         <div id="paid-content" class="tab-content">
-            <button class="copy-btn" onclick="copyContent('paid')">📋 コピー</button>
-            <div id="output-paid" class="output-box">有料パートの内容が表示されます。</div>
+            <button class="copy-btn" onclick="copyOutputBox('paid')">📋 コピー</button>
+            <div id="output-paid" class="output-box">ここに有料パートが表示されます。</div>
         </div>
 
+        <!-- Threads タブ -->
         <div id="threads-content" class="tab-content">
             <div class="thread-tip">
-                💡 Threadsの3連投スレッドです。同じ時刻に「投稿1」を投稿後、それに「返信」する形で投稿2・3を続けてください。1スレッドが物語のように繋がります。
+                💡 同じ時刻に「投稿1」を投稿後、それに「返信」する形で投稿2・3を続けてください。1スレッドが物語のように繋がります。朝・昼・夜で3パターン用意しました。
             </div>
-            <button class="copy-all-btn" onclick="copyAllThreads()">📋 全部まとめてコピー</button>
-            <div class="threads-wrap">
-                <div class="thread-card">
-                    <div class="thread-header">
-                        <div class="thread-num">🧵 投稿1（フック・共感）</div>
-                        <div class="thread-count" id="count-thread1">0 / 500字</div>
+            <button class="copy-all-btn" onclick="copyAllThreadsTimes()">📋 朝昼夜すべてのThreads投稿をコピー</button>
+
+            <!-- 朝 -->
+            <div class="time-section">
+                <div class="time-header">🌅 朝の3連投（6〜9時投稿向け・前向きスタート型）</div>
+                <button class="time-copy-btn" onclick="copyTimeThreads('morning')">📋 朝の3連投をまとめてコピー</button>
+                <div class="threads-wrap" data-time="morning">
+                    <div class="thread-card">
+                        <div class="thread-header">
+                            <div class="thread-num">🧵 朝・投稿1（フック・共感）</div>
+                            <div class="thread-count" id="count-t-morning-1">0 / 500字</div>
+                        </div>
+                        <div class="thread-body" id="output-t-morning-1">投稿1の内容がここに表示されます。</div>
+                        <div class="thread-actions">
+                            <button class="thread-copy-btn" onclick="copyOne('t-morning-1')">📋 コピー</button>
+                        </div>
                     </div>
-                    <div class="thread-body" id="output-thread1">投稿1の内容がここに表示されます。</div>
-                    <div class="thread-actions">
-                        <button class="thread-copy-btn" onclick="copyThread(1)">📋 投稿1をコピー</button>
+                    <div class="thread-card">
+                        <div class="thread-header">
+                            <div class="thread-num">🧵 朝・投稿2(深化)</div>
+                            <div class="thread-count" id="count-t-morning-2">0 / 500字</div>
+                        </div>
+                        <div class="thread-body" id="output-t-morning-2">投稿2の内容がここに表示されます。</div>
+                        <div class="thread-actions">
+                            <button class="thread-copy-btn" onclick="copyOne('t-morning-2')">📋 コピー</button>
+                        </div>
+                    </div>
+                    <div class="thread-card">
+                        <div class="thread-header">
+                            <div class="thread-num">🧵 朝・投稿3(解決・CTA)</div>
+                            <div class="thread-count" id="count-t-morning-3">0 / 500字</div>
+                        </div>
+                        <div class="thread-body" id="output-t-morning-3">投稿3の内容がここに表示されます。</div>
+                        <div class="thread-actions">
+                            <button class="thread-copy-btn" onclick="copyOne('t-morning-3')">📋 コピー</button>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="thread-card">
-                    <div class="thread-header">
-                        <div class="thread-num">🧵 投稿2（深化・展開）</div>
-                        <div class="thread-count" id="count-thread2">0 / 500字</div>
+            <!-- 昼 -->
+            <div class="time-section">
+                <div class="time-header">🌞 昼の3連投（12〜14時投稿向け・ノウハウ型）</div>
+                <button class="time-copy-btn" onclick="copyTimeThreads('lunch')">📋 昼の3連投をまとめてコピー</button>
+                <div class="threads-wrap" data-time="lunch">
+                    <div class="thread-card">
+                        <div class="thread-header">
+                            <div class="thread-num">🧵 昼・投稿1（フック・共感）</div>
+                            <div class="thread-count" id="count-t-lunch-1">0 / 500字</div>
+                        </div>
+                        <div class="thread-body" id="output-t-lunch-1">投稿1の内容がここに表示されます。</div>
+                        <div class="thread-actions">
+                            <button class="thread-copy-btn" onclick="copyOne('t-lunch-1')">📋 コピー</button>
+                        </div>
                     </div>
-                    <div class="thread-body" id="output-thread2">投稿2の内容がここに表示されます。</div>
-                    <div class="thread-actions">
-                        <button class="thread-copy-btn" onclick="copyThread(2)">📋 投稿2をコピー</button>
+                    <div class="thread-card">
+                        <div class="thread-header">
+                            <div class="thread-num">🧵 昼・投稿2(深化)</div>
+                            <div class="thread-count" id="count-t-lunch-2">0 / 500字</div>
+                        </div>
+                        <div class="thread-body" id="output-t-lunch-2">投稿2の内容がここに表示されます。</div>
+                        <div class="thread-actions">
+                            <button class="thread-copy-btn" onclick="copyOne('t-lunch-2')">📋 コピー</button>
+                        </div>
+                    </div>
+                    <div class="thread-card">
+                        <div class="thread-header">
+                            <div class="thread-num">🧵 昼・投稿3(解決・CTA)</div>
+                            <div class="thread-count" id="count-t-lunch-3">0 / 500字</div>
+                        </div>
+                        <div class="thread-body" id="output-t-lunch-3">投稿3の内容がここに表示されます。</div>
+                        <div class="thread-actions">
+                            <button class="thread-copy-btn" onclick="copyOne('t-lunch-3')">📋 コピー</button>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="thread-card">
-                    <div class="thread-header">
-                        <div class="thread-num">🧵 投稿3(解決・CTA)</div>
-                        <div class="thread-count" id="count-thread3">0 / 500字</div>
+            <!-- 夜 -->
+            <div class="time-section">
+                <div class="time-header">🌙 夜の3連投(20〜23時投稿向け・共感じっくり型)</div>
+                <button class="time-copy-btn" onclick="copyTimeThreads('night')">📋 夜の3連投をまとめてコピー</button>
+                <div class="threads-wrap" data-time="night">
+                    <div class="thread-card">
+                        <div class="thread-header">
+                            <div class="thread-num">🧵 夜・投稿1（フック・共感）</div>
+                            <div class="thread-count" id="count-t-night-1">0 / 500字</div>
+                        </div>
+                        <div class="thread-body" id="output-t-night-1">投稿1の内容がここに表示されます。</div>
+                        <div class="thread-actions">
+                            <button class="thread-copy-btn" onclick="copyOne('t-night-1')">📋 コピー</button>
+                        </div>
                     </div>
-                    <div class="thread-body" id="output-thread3">投稿3の内容がここに表示されます。</div>
-                    <div class="thread-actions">
-                        <button class="thread-copy-btn" onclick="copyThread(3)">📋 投稿3をコピー</button>
+                    <div class="thread-card">
+                        <div class="thread-header">
+                            <div class="thread-num">🧵 夜・投稿2(深化)</div>
+                            <div class="thread-count" id="count-t-night-2">0 / 500字</div>
+                        </div>
+                        <div class="thread-body" id="output-t-night-2">投稿2の内容がここに表示されます。</div>
+                        <div class="thread-actions">
+                            <button class="thread-copy-btn" onclick="copyOne('t-night-2')">📋 コピー</button>
+                        </div>
                     </div>
+                    <div class="thread-card">
+                        <div class="thread-header">
+                            <div class="thread-num">🧵 夜・投稿3(解決・CTA)</div>
+                            <div class="thread-count" id="count-t-night-3">0 / 500字</div>
+                        </div>
+                        <div class="thread-body" id="output-t-night-3">投稿3の内容がここに表示されます。</div>
+                        <div class="thread-actions">
+                            <button class="thread-copy-btn" onclick="copyOne('t-night-3')">📋 コピー</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- X タブ -->
+        <div id="x-content" class="tab-content">
+            <div class="thread-tip">
+                💡 X（Twitter）用の朝昼夜投稿です。各140字以内で1日3回投稿することで認知が広がります。
+            </div>
+            <button class="copy-all-btn" onclick="copyAllX()">📋 朝昼夜すべてのX投稿をコピー</button>
+
+            <div class="thread-card">
+                <div class="thread-header">
+                    <div class="thread-num">🌅 朝のX投稿（前向きスタート型）</div>
+                    <div class="thread-count" id="count-x-morning">0 / 140字</div>
+                </div>
+                <div class="thread-body" id="output-x-morning">朝の投稿がここに表示されます。</div>
+                <div class="thread-actions">
+                    <button class="thread-copy-btn" onclick="copyOne('x-morning')">📋 コピー</button>
+                </div>
+            </div>
+
+            <div class="thread-card">
+                <div class="thread-header">
+                    <div class="thread-num">🌞 昼のX投稿（ノウハウ気づき型）</div>
+                    <div class="thread-count" id="count-x-lunch">0 / 140字</div>
+                </div>
+                <div class="thread-body" id="output-x-lunch">昼の投稿がここに表示されます。</div>
+                <div class="thread-actions">
+                    <button class="thread-copy-btn" onclick="copyOne('x-lunch')">📋 コピー</button>
+                </div>
+            </div>
+
+            <div class="thread-card">
+                <div class="thread-header">
+                    <div class="thread-num">🌙 夜のX投稿（共感じっくり型）</div>
+                    <div class="thread-count" id="count-x-night">0 / 140字</div>
+                </div>
+                <div class="thread-body" id="output-x-night">夜の投稿がここに表示されます。</div>
+                <div class="thread-actions">
+                    <button class="thread-copy-btn" onclick="copyOne('x-night')">📋 コピー</button>
                 </div>
             </div>
         </div>
@@ -442,45 +629,88 @@
 
 <script>
     // --- 定数と設定 ---
-    const API_ENDPOINT = 'https://your-worker.workers.dev'; // ←Cloudflare Worker URLに差し替え
+    const API_ENDPOINT = 'https://sozoku-mikke.yymmatsu.workers.dev'; // 既存Worker流用
     const MODEL = 'claude-sonnet-4-6';
-    const MAX_TOKENS = 12000;
+    const MAX_TOKENS = 16000;
 
-    const NOTE_URL   = 'https://note.com/_yoshibon/n/note-ureru-mikke';   // ←note記事URLに差し替え
-    const STRIPE_URL = 'https://buy.stripe.com/your-stripe-link';         // ←Stripe決済URLに差し替え
+    const NOTE_URL   = 'https://note.com/_yoshibon/n/mikke-studio';   // ←note記事URLに差し替え
+    const STRIPE_URL = 'https://buy.stripe.com/your-stripe-link';    // ←Stripe決済URLに差し替え
 
     const FREE_LIMIT = 3;
     const LITE_LIMIT = 50;
-    const LITE_PASS = 'note-lite-2k26';
-    const PRO_PASS = 'note-pro-2k26';
+    const LITE_PASS   = 'studio-lite-2k26';
+    const PRO_PASS    = 'studio-pro-2k26';
+    const MASTER_PASS = 'spc-master-2k26'; // 自分専用・無制限・絶対公開しない 🔐
 
     // --- 初期化 & ローカルストレージ ---
     let state = {
-        uses: parseInt(localStorage.getItem('note_ureru_uses') || '0'),
-        license: localStorage.getItem('note_ureru_license') || 'none'
+        uses: parseInt(localStorage.getItem('mikke_studio_uses') || '0'),
+        license: localStorage.getItem('mikke_studio_license') || 'none'
     };
 
-    const formFields = ['appName', 'appUrl', 'litePass', 'proUrl', 'proPrice', 'painPoint', 'benefit'];
-    
+    const formFields = ['appName', 'appUrl', 'noteUrl', 'litePass', 'proUrl', 'proPrice', 'painPoint', 'benefit'];
+
     function saveDraft() {
         formFields.forEach(id => {
             const el = document.getElementById(id);
-            if (el) localStorage.setItem('draft_' + id, el.value);
+            if (el) localStorage.setItem('draft_studio_' + id, el.value);
         });
+        // mikke共通データに保存（将来のみっけシリーズ連携用）
+        const sharedData = {
+            name: document.getElementById('appName').value,
+            url: document.getElementById('appUrl').value,
+            noteUrl: document.getElementById('noteUrl').value,
+            litePass: document.getElementById('litePass').value,
+            proUrl: document.getElementById('proUrl').value,
+            proPrice: document.getElementById('proPrice').value,
+            target: (document.querySelector('input[name="target"]:checked') || {}).value || '',
+            pain: document.getElementById('painPoint').value,
+            benefit: document.getElementById('benefit').value,
+            tone: (document.querySelector('input[name="tone"]:checked') || {}).value || ''
+        };
+        localStorage.setItem('mikke-app-data', JSON.stringify(sharedData));
     }
 
     function loadDraft() {
+        // 1. みっけ売れスタジオの個別下書きを読み込み
         formFields.forEach(id => {
-            const val = localStorage.getItem('draft_' + id);
+            const val = localStorage.getItem('draft_studio_' + id);
             if (val) document.getElementById(id).value = val;
         });
+
+        // 2. mikke共通データがあれば、空欄のみ補完
+        try {
+            const shared = JSON.parse(localStorage.getItem('mikke-app-data') || 'null');
+            if (shared) {
+                if (shared.name && !document.getElementById('appName').value) document.getElementById('appName').value = shared.name;
+                if (shared.url && !document.getElementById('appUrl').value) document.getElementById('appUrl').value = shared.url;
+                if (shared.noteUrl && !document.getElementById('noteUrl').value) document.getElementById('noteUrl').value = shared.noteUrl;
+                if (shared.litePass && !document.getElementById('litePass').value) document.getElementById('litePass').value = shared.litePass;
+                if (shared.proUrl && !document.getElementById('proUrl').value) document.getElementById('proUrl').value = shared.proUrl;
+                if (shared.proPrice && document.getElementById('proPrice').value === '¥2,980/月') document.getElementById('proPrice').value = shared.proPrice;
+                if (shared.pain && !document.getElementById('painPoint').value) document.getElementById('painPoint').value = shared.pain;
+                if (shared.benefit && !document.getElementById('benefit').value) document.getElementById('benefit').value = shared.benefit;
+                if (shared.target) {
+                    const r = document.querySelector(`input[name="target"][value="${shared.target}"]`);
+                    if (r) r.checked = true;
+                }
+                if (shared.tone) {
+                    const r = document.querySelector(`input[name="tone"][value="${shared.tone}"]`);
+                    if (r) r.checked = true;
+                }
+            }
+        } catch(e) { console.warn('mikke-app-data 読込エラー', e); }
+
         updateBadge();
     }
 
     // --- UI更新系 ---
     function updateBadge() {
         const badge = document.getElementById('usage-badge');
-        if (state.license === 'pro') {
+        if (state.license === 'master') {
+            badge.innerText = '👑 Master';
+            badge.style.background = 'linear-gradient(135deg, #d0a900, #e8c94a)';
+        } else if (state.license === 'pro') {
             badge.innerText = '✨ Pro版';
         } else if (state.license === 'lite') {
             badge.innerText = `🌿 ライト 残り${LITE_LIMIT - state.uses}回`;
@@ -490,7 +720,7 @@
     }
 
     function checkLimit() {
-        if (state.license === 'pro') return true;
+        if (state.license === 'master' || state.license === 'pro') return true;
         if (state.license === 'lite' && state.uses < LITE_LIMIT) return true;
         if (state.license === 'none' && state.uses < FREE_LIMIT) return true;
 
@@ -526,8 +756,8 @@
         }
 
         // 未購入（none）→ 2択UI
-        const litePrice = (document.querySelector('input[name="litePrice"]:checked') || {}).value || '¥980';
-        const proPrice = (document.getElementById('proPrice') || {}).value || '¥4,980/月';
+        const litePrice = '¥1,980';
+        const proPrice = '¥4,980/月';
 
         card.innerHTML = `
             <h3>🔓 無料体験が終了しました</h3>
@@ -561,14 +791,17 @@
 
     function unlock() {
         const key = document.getElementById('licenseKey').value.trim();
-        if (key === PRO_PASS) {
+        if (key === MASTER_PASS) {
+            state.license = 'master';
+            localStorage.setItem('mikke_studio_license', 'master');
+        } else if (key === PRO_PASS) {
             state.license = 'pro';
-            localStorage.setItem('note_ureru_license', 'pro');
+            localStorage.setItem('mikke_studio_license', 'pro');
         } else if (key === LITE_PASS) {
             state.license = 'lite';
-            state.uses = 0; // ライト版開始時に回数リセット（50回フル利用可）
-            localStorage.setItem('note_ureru_license', 'lite');
-            localStorage.setItem('note_ureru_uses', '0');
+            state.uses = 0;
+            localStorage.setItem('mikke_studio_license', 'lite');
+            localStorage.setItem('mikke_studio_uses', '0');
         } else {
             alert('パスワードが正しくありません');
             return;
@@ -581,7 +814,7 @@
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
-        const tabMap = { 'free': 0, 'paid': 1, 'threads': 2 };
+        const tabMap = { 'free': 0, 'paid': 1, 'threads': 2, 'x': 3 };
         const idx = tabMap[type];
         if (idx !== undefined) {
             document.querySelectorAll('.tab')[idx].classList.add('active');
@@ -592,27 +825,25 @@
         if (contentEl) contentEl.classList.add('active');
     }
 
-    // Threads投稿を反映＋文字数カウント
-    function updateThreadBox(num, text) {
-        const body = document.getElementById('output-thread' + num);
-        const count = document.getElementById('count-thread' + num);
-        if (!body || !count) return;
+    // === SNS出力用ヘルパー ===
 
-        const content = text || `投稿${num}の内容がここに表示されます。`;
-        body.innerText = content;
-
-        const len = text ? text.length : 0;
-        count.innerText = `${len} / 500字`;
-        if (len > 500) {
-            count.classList.add('over');
-        } else {
-            count.classList.remove('over');
+    // 出力ボックスを更新（テキスト反映＋文字数カウント）
+    function updateOutputBox(id, text, limit) {
+        const body = document.getElementById('output-' + id);
+        const count = document.getElementById('count-' + id);
+        if (!body) return;
+        body.innerText = text || '（生成に失敗しました。再生成をお試しください）';
+        if (count) {
+            const len = text ? text.length : 0;
+            count.innerText = `${len} / ${limit}字`;
+            if (len > limit) count.classList.add('over');
+            else count.classList.remove('over');
         }
     }
 
-    // 個別Threads投稿のコピー
-    function copyThread(num) {
-        const text = document.getElementById('output-thread' + num).innerText;
+    // 個別コピー
+    function copyOne(id) {
+        const text = document.getElementById('output-' + id).innerText;
         const formatted = `════ ここからコピー開始 ════\n\n${text}\n\n════ ここまでコピー終了 ════`;
         navigator.clipboard.writeText(formatted).then(() => {
             const btn = event.target;
@@ -622,27 +853,93 @@
         });
     }
 
-    // 3連投を全部まとめてコピー
-    function copyAllThreads() {
-        const t1 = document.getElementById('output-thread1').innerText;
-        const t2 = document.getElementById('output-thread2').innerText;
-        const t3 = document.getElementById('output-thread3').innerText;
+    // 朝/昼/夜のThreads3連投をまとめてコピー
+    function copyTimeThreads(time) {
+        const labels = { morning: '🌅 朝', lunch: '🌞 昼', night: '🌙 夜' };
+        const t1 = document.getElementById(`output-t-${time}-1`).innerText;
+        const t2 = document.getElementById(`output-t-${time}-2`).innerText;
+        const t3 = document.getElementById(`output-t-${time}-3`).innerText;
 
         const formatted =
 `════ ここからコピー開始 ════
 
-【Threads 投稿1】
+【${labels[time]}のThreads3連投】
+
+▼投稿1
 ${t1}
 
 ────────────────
 
-【Threads 投稿2】
+▼投稿2
 ${t2}
 
 ────────────────
 
-【Threads 投稿3】
+▼投稿3
 ${t3}
+
+════ ここまでコピー終了 ════`;
+
+        navigator.clipboard.writeText(formatted).then(() => {
+            const btn = event.target;
+            const original = btn.innerText;
+            btn.innerText = '✓ コピーしました';
+            setTimeout(() => btn.innerText = original, 2000);
+        });
+    }
+
+    // 朝昼夜すべてのThreads投稿（9投稿）をまとめてコピー
+    function copyAllThreadsTimes() {
+        const times = [
+            { key: 'morning', label: '🌅 朝の3連投' },
+            { key: 'lunch',   label: '🌞 昼の3連投' },
+            { key: 'night',   label: '🌙 夜の3連投' }
+        ];
+        let parts = ['════ ここからコピー開始 ════', '', '【1日分のThreads投稿（朝・昼・夜）】', ''];
+        times.forEach(t => {
+            parts.push('───────────────────');
+            parts.push(t.label);
+            parts.push('───────────────────');
+            for (let i = 1; i <= 3; i++) {
+                parts.push('');
+                parts.push(`▼投稿${i}`);
+                parts.push(document.getElementById(`output-t-${t.key}-${i}`).innerText);
+            }
+            parts.push('');
+        });
+        parts.push('════ ここまでコピー終了 ════');
+
+        navigator.clipboard.writeText(parts.join('\n')).then(() => {
+            const btn = event.target;
+            const original = btn.innerText;
+            btn.innerText = '✓ 全部コピーしました';
+            setTimeout(() => btn.innerText = original, 2000);
+        });
+    }
+
+    // 朝昼夜すべてのX投稿（3投稿）をまとめてコピー
+    function copyAllX() {
+        const morning = document.getElementById('output-x-morning').innerText;
+        const lunch   = document.getElementById('output-x-lunch').innerText;
+        const night   = document.getElementById('output-x-night').innerText;
+
+        const formatted =
+`════ ここからコピー開始 ════
+
+【1日分のX投稿（朝・昼・夜）】
+
+🌅 朝のX投稿
+${morning}
+
+────────────────
+
+🌞 昼のX投稿
+${lunch}
+
+────────────────
+
+🌙 夜のX投稿
+${night}
 
 ════ ここまでコピー終了 ════`;
 
@@ -661,23 +958,21 @@ ${t3}
         const btn = document.getElementById('generateBtn');
         const banner = document.getElementById('error-banner');
         banner.style.display = 'none';
+        banner.style.background = '';
 
         // 入力値取得
         const data = {
-            name: document.getElementById('appName').value,
-            url: document.getElementById('appUrl').value,
-            litePass: document.getElementById('litePass').value,
-            litePrice: document.querySelector('input[name="litePrice"]:checked').value,
-            proUrl: document.getElementById('proUrl').value,
-            proPrice: document.getElementById('proPrice').value,
+            name: document.getElementById('appName').value.trim(),
+            url: document.getElementById('appUrl').value.trim(),
+            noteUrl: document.getElementById('noteUrl').value.trim(),
             target: document.querySelector('input[name="target"]:checked').value,
-            pain: document.getElementById('painPoint').value,
-            benefit: document.getElementById('benefit').value,
+            pain: document.getElementById('painPoint').value.trim(),
+            benefit: document.getElementById('benefit').value.trim(),
             tone: document.querySelector('input[name="tone"]:checked').value
         };
 
         if (!data.name || !data.url || !data.pain || !data.benefit) {
-            alert('必須項目を入力してください');
+            alert('必須項目を入力してください（アプリ名・アプリURL・悩み・叶うこと）');
             return;
         }
 
@@ -685,33 +980,59 @@ ${t3}
         btn.innerText = '✨ 生成中...';
         document.getElementById('loading').style.display = 'flex';
 
-        const prompt = `あなたは売れるnote記事＋Threads投稿を書くプロのコピーライターです。
+        const ctaUrl = data.noteUrl || data.url;
 
-以下の情報を元に、note記事（無料・有料）と、Threadsの3連投スレッドを生成してください。
+        const prompt = `あなたは中小企業向けの「売れるnote記事＋SNS集客」プロコピーライターです。
 
+以下のアプリを売るための、note記事（無料・有料）と、SNS投稿（X朝昼夜・Threads朝昼夜3連投）を一気に生成してください。
+
+【アプリ情報】
+アプリ名：${data.name}
+アプリURL：${data.url}
+note記事URL：${data.noteUrl || '（なし）'}
+ライト版パスワード：${data.litePass || '（未設定）'}
+Pro版URL：${data.proUrl || '（なし）'}
+Pro版価格：${data.proPrice || '¥2,980/月'}
 ターゲット：${data.target}
 解決する悩み：${data.pain}
 アプリで叶うこと：${data.benefit}
-文体：${data.tone}
-アプリ名：${data.name}
+基本文体：${data.tone}
 
-【重要・必ず守る出力形式】
-以下の5つのマーカーで区切って出力してください。
-マーカー以外の前置き・後書き・説明は一切不要です。
+【最重要・出力形式の厳守】
+以下の15個のマーカーで区切って出力してください。
+マーカー以外の前置き・後書き・説明・コードブロック記号は一切不要です。
 
 ===FREE===
-（ここに無料パート全文を書く）
+（noteの無料パート全文）
 ===PAID===
-（ここに有料パート全文を書く）
-===THREAD1===
-(ここにThreads投稿1を書く・必ず500字以内)
-===THREAD2===
-(ここにThreads投稿2を書く・必ず500字以内)
-===THREAD3===
-(ここにThreads投稿3を書く・必ず500字以内)
+（noteの有料パート全文）
+===X_MORNING===
+（朝のX投稿140字以内）
+===X_LUNCH===
+（昼のX投稿140字以内）
+===X_NIGHT===
+（夜のX投稿140字以内）
+===T_MORNING_1===
+（朝Threads投稿1・500字以内）
+===T_MORNING_2===
+（朝Threads投稿2・500字以内）
+===T_MORNING_3===
+（朝Threads投稿3・500字以内）
+===T_LUNCH_1===
+（昼Threads投稿1・500字以内）
+===T_LUNCH_2===
+（昼Threads投稿2・500字以内）
+===T_LUNCH_3===
+（昼Threads投稿3・500字以内）
+===T_NIGHT_1===
+（夜Threads投稿1・500字以内）
+===T_NIGHT_2===
+（夜Threads投稿2・500字以内）
+===T_NIGHT_3===
+（夜Threads投稿3・500字以内）
 ===END===
 
-【無料パート】の内容構成（順番通りに）：
+【note無料パート】の内容構成（順番通りに、見出し付きで自然な流れで）：
 1. 共感の入口（300-400字）
 2. 課題の言語化
 3. 解決の方向性提示
@@ -721,7 +1042,7 @@ ${t3}
 7. タイトル案3つ（A/Bテスト用）
 8. 推奨ハッシュタグ6個
 
-【有料パート】の内容構成（順番通りに）：
+【note有料パート】の内容構成（順番通りに）：
 1. 購入お礼メッセージ
 2. アプリURL：${data.url}
 3. ライト版アクセスパスワード：${data.litePass}
@@ -730,37 +1051,56 @@ ${t3}
 6. Pro版への自然な導線（${data.proUrl ? 'Pro版URL：' + data.proUrl + '、価格：' + data.proPrice : 'Pro版あり：' + data.proPrice}）
 7. 結びのメッセージ
 
-【Threads3連投スレッド】の作成ルール（最重要）：
+【時間帯別のトーン使い分け】
 
-このスレッドは「同じ時刻に3つを連投して、1つの物語として読ませる」形式です。
-読者がスレッドを開いて最後まで読み切る構造を作ってください。
+🌅 朝（6〜9時投稿想定）
+- 通勤・通学中にスマホで読む人向け
+- 前向き・希望・スタートの空気
+- サクッと読める軽さ
+- 絵文字：☀️🌱🚀など
+
+🌞 昼（12〜14時投稿想定）
+- ランチ休憩中、ながら読み
+- ノウハウ・気づき・情報価値
+- シェア・保存されやすい構成
+- 絵文字：📝💡✨など
+
+🌙 夜（20〜23時投稿想定）
+- くつろぎタイム、じっくり読む
+- 共感・振り返り・感情訴求
+- 心に残る、刺さる構成
+- 絵文字：🌷🕯️🌙など
+
+【X投稿のルール】
+- 140字以内（必須・厳守）
+- 改行は1〜2回程度
+- ハッシュタグ2〜3個（最後）
+- CTAは ${ctaUrl}
+- 絵文字は1〜2個
+
+【Threads3連投スレッドのルール（最重要）】
+同じ時刻に3つを連投して、1つの物語として読ませる形式です。
 
 ▼投稿1（フック・共感）500字以内
-- 1〜2行目で読者の心をつかむ印象的な書き出し
-- ターゲットの「あるある」体験を具体的に描写
-- 「続きが気になる…」と思わせて末尾を「（続）」で切る
-- 文体：${data.tone}を反映
+- 印象的な書き出しでターゲットの「あるある」を描写
+- 末尾を「（続）」で切る
 
 ▼投稿2（深化・展開）500字以内
 - 「（続き）」で始める
-- 投稿1の悩みをさらに深掘り
-- 「あ、これ私のことだ」と共感を強める
+- 悩みをさらに深掘り
 - 末尾は「（続）」で切る
-- 解決策はまだ出さない
 
 ▼投稿3（解決・CTA）500字以内
 - 「（続き）」で始める
 - ${data.name}を自然に紹介
-- 具体的な使い方やベネフィットを1〜2個
-- 末尾に「詳細はプロフィール欄から」「note記事をご覧ください」等のCTA
-- 最後にハッシュタグ3〜4個（半角#）
+- ${ctaUrl} への誘導
+- 最後にハッシュタグ3〜4個
 
 【全体の注意】
-- 改行は適度に入れる（読みやすさ重視）
-- 絵文字は1投稿あたり1〜3個まで
-- 各投稿500字を絶対に超えない
-- 説教くさくない、温かい語り口
-- ${data.target}に響く言葉選び
+- 朝・昼・夜で内容や切り口を必ず変える（同じ表現を使わない）
+- 改行は適度に入れる
+- 各投稿の文字数を絶対に守る
+- 温かい語り口・${data.target}に響く言葉選び
 
 それでは ===FREE=== から始めてください。`;
 
@@ -779,85 +1119,96 @@ ${t3}
 
             const result = await response.json();
 
-            // === Anthropic API レスポンス処理（マーカー方式・5セクション対応） ===
-            // 1. テキスト抽出
+            // === Anthropic API レスポンス処理（15マーカー対応） ===
             const rawText = result.content[0].text || '';
 
-            // 2. マーカーで分割
-            // ===FREE=== ... ===PAID=== ... ===THREAD1=== ... ===THREAD2=== ... ===THREAD3=== ... ===END===
-            const markers = ['===FREE===', '===PAID===', '===THREAD1===', '===THREAD2===', '===THREAD3===', '===END==='];
+            const markers = [
+                '===FREE===', '===PAID===',
+                '===X_MORNING===', '===X_LUNCH===', '===X_NIGHT===',
+                '===T_MORNING_1===', '===T_MORNING_2===', '===T_MORNING_3===',
+                '===T_LUNCH_1===',   '===T_LUNCH_2===',   '===T_LUNCH_3===',
+                '===T_NIGHT_1===',   '===T_NIGHT_2===',   '===T_NIGHT_3===',
+                '===END==='
+            ];
             const positions = markers.map(m => rawText.indexOf(m));
 
-            let freeContent = '';
-            let paidContent = '';
-            let thread1 = '';
-            let thread2 = '';
-            let thread3 = '';
-
             // セクション抽出ヘルパー
-            function extractSection(startMarkerIdx, endMarkerIdx) {
-                const startPos = positions[startMarkerIdx];
+            function extractSection(idx) {
+                const startPos = positions[idx];
                 if (startPos === -1) return '';
                 let endPos = -1;
-                // 次に見つかるマーカーを探す
-                for (let i = startMarkerIdx + 1; i < positions.length; i++) {
-                    if (positions[i] !== -1) {
-                        endPos = positions[i];
-                        break;
-                    }
+                for (let i = idx + 1; i < positions.length; i++) {
+                    if (positions[i] !== -1) { endPos = positions[i]; break; }
                 }
                 if (endPos === -1) endPos = rawText.length;
-                return rawText.substring(startPos + markers[startMarkerIdx].length, endPos).trim();
+                return rawText.substring(startPos + markers[idx].length, endPos).trim();
             }
 
-            freeContent = extractSection(0);
-            paidContent = extractSection(1);
-            thread1 = extractSection(2);
-            thread2 = extractSection(3);
-            thread3 = extractSection(4);
+            const freeContent = extractSection(0);
+            const paidContent = extractSection(1);
+            const xMorning = extractSection(2);
+            const xLunch   = extractSection(3);
+            const xNight   = extractSection(4);
+            const tM1      = extractSection(5);
+            const tM2      = extractSection(6);
+            const tM3      = extractSection(7);
+            const tL1      = extractSection(8);
+            const tL2      = extractSection(9);
+            const tL3      = extractSection(10);
+            const tN1      = extractSection(11);
+            const tN2      = extractSection(12);
+            const tN3      = extractSection(13);
 
-            // マーカーが全く見つからない場合のフォールバック
-            if (positions[0] === -1 && positions[1] === -1) {
-                console.warn('Markers not found, raw output:', rawText.substring(0, 200));
-                freeContent = rawText;
-                paidContent = '（マーカーが見つかりませんでした。再生成をお試しください）';
-
-                banner.innerText = '⚠️ 出力形式が想定と異なります。再生成をお試しください。';
+            // 全マーカーが見つからない場合のフォールバック警告
+            const foundCount = positions.slice(0, 14).filter(p => p !== -1).length;
+            if (foundCount < 8) {
+                console.warn('Markers found:', foundCount, '/14. Raw:', rawText.substring(0, 300));
+                banner.innerText = `⚠️ 一部のセクションが生成されませんでした（${foundCount}/14）。再生成をお試しください。`;
                 banner.style.display = 'block';
                 banner.style.background = '#f39c12';
             }
 
-            // 3. 出力反映
+            // 出力反映
             document.getElementById('output-free').innerText = freeContent || '（無料パートの生成に失敗しました）';
             document.getElementById('output-paid').innerText = paidContent || '（有料パートの生成に失敗しました）';
 
-            // Threads 3連投の反映＋文字数カウント
-            updateThreadBox(1, thread1);
-            updateThreadBox(2, thread2);
-            updateThreadBox(3, thread3);
+            updateOutputBox('x-morning', xMorning, 140);
+            updateOutputBox('x-lunch',   xLunch,   140);
+            updateOutputBox('x-night',   xNight,   140);
 
-            // 回数カウント（Pro版以外）
-            if (state.license !== 'pro') {
+            updateOutputBox('t-morning-1', tM1, 500);
+            updateOutputBox('t-morning-2', tM2, 500);
+            updateOutputBox('t-morning-3', tM3, 500);
+            updateOutputBox('t-lunch-1',   tL1, 500);
+            updateOutputBox('t-lunch-2',   tL2, 500);
+            updateOutputBox('t-lunch-3',   tL3, 500);
+            updateOutputBox('t-night-1',   tN1, 500);
+            updateOutputBox('t-night-2',   tN2, 500);
+            updateOutputBox('t-night-3',   tN3, 500);
+
+            // 回数カウント（Master/Pro版以外）
+            if (state.license !== 'master' && state.license !== 'pro') {
                 state.uses++;
-                localStorage.setItem('note_ureru_uses', state.uses);
+                localStorage.setItem('mikke_studio_uses', state.uses);
                 updateBadge();
             }
 
         } catch (e) {
             banner.innerText = '⚠️ 通信エラーまたは生成失敗。少し待ってから再度お試しください。';
             banner.style.display = 'block';
+            banner.style.background = '';
             console.error(e);
         } finally {
             btn.disabled = false;
-            btn.innerText = '🚀 売れるnote記事を生成する';
+            btn.innerText = '🚀 note記事＋SNS投稿を一気に生成する（14コンテンツ）';
             document.getElementById('loading').style.display = 'none';
         }
     }
 
-    function copyContent(type) {
-        const text = document.getElementById(type === 'free' ? 'output-free' : 'output-paid').innerText;
+    // note無料/有料パートのコピー
+    function copyOutputBox(type) {
+        const text = document.getElementById('output-' + type).innerText;
         const formatted = `════ ここからコピー開始 ════\n\n${text}\n\n════ ここまでコピー終了 ════`;
-        
         navigator.clipboard.writeText(formatted).then(() => {
             const btn = document.querySelector(`#${type}-content .copy-btn`);
             const original = btn.innerText;
@@ -868,7 +1219,13 @@ ${t3}
 
     // イベントリスナー
     document.getElementById('generateBtn').addEventListener('click', generate);
-    formFields.forEach(id => document.getElementById(id).addEventListener('input', saveDraft));
+    formFields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', saveDraft);
+    });
+    document.querySelectorAll('input[name="target"], input[name="tone"]').forEach(el => {
+        el.addEventListener('change', saveDraft);
+    });
     window.addEventListener('load', loadDraft);
 </script>
 
